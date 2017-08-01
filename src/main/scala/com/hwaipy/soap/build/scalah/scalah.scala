@@ -5,8 +5,7 @@ import java.io.{File, PrintWriter}
 import java.nio.file._
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.regex.Pattern
-
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 object ScalaH {
   val isMac = System.getProperty("os.name") match {
@@ -66,7 +65,7 @@ object ScalaH {
           })
           process(Array("scalac", "-classpath", dependences, scriptFileName, "-d", s"$cd${scriptFileName.dropRight(6)}.jar"))
           process(Array("jar", "-xf", s"${scriptFileName.dropRight(6)}.jar", "META-INF/MANIFEST.MF"), new File(s"$cd"))
-          val cp = s"Class-Path: ${Files.list(libPath).iterator.filter(p => p.getFileName.toString.toLowerCase.endsWith(".jar")).map(f => s"lib/${f.getFileName}").mkString(" ")}"
+          val cp = s"Class-Path: ${Files.list(libPath).iterator.asScala.filter(p => p.getFileName.toString.toLowerCase.endsWith(".jar")).map(f => s"lib/${f.getFileName}").mkString(" ")}"
           val lines = Source.fromFile(new File(s"$cd/META-INF/MANIFEST.MF")).getLines.toList.filterNot(s => s.size == 0)
           val pw = new PrintWriter(new File(s"$cd/META-INF/MANIFEST.MF"))
           lines.foreach(pw.println)
@@ -86,7 +85,7 @@ object ScalaH {
             Files.copy(originalPath, targetPath, StandardCopyOption.REPLACE_EXISTING)
           })
           process(Array("scalac", "-classpath", dependences, scriptFileName, "-d", s"$cd${scriptFileName.dropRight(6)}.jar"))
-          Files.list(libPath).iterator.filter(p => p.getFileName.toString.toLowerCase.endsWith(".jar")).foreach(f => {
+          Files.list(libPath).iterator.asScala.filter(p => p.getFileName.toString.toLowerCase.endsWith(".jar")).foreach(f => {
             process(Array("jar", "-xf", f.getFileName.toString), libPath.toFile)
             Files.delete(f)
           })
@@ -96,7 +95,7 @@ object ScalaH {
           Files.delete(libPath.resolve(s"${scriptFileName.dropRight(6)}.jar"))
           process(Array("jar", "-cfm", s"${scriptFileName.dropRight(6)}.jar", "META-INF/MANIFEST.MF", "."), libPath.toFile)
           Files.move(libPath.resolve(s"${scriptFileName.dropRight(6)}.jar"), libPath.getParent.resolve(s"${scriptFileName.dropRight(6)}.jar"))
-          Files.walk(libPath, Int.MaxValue).iterator.toList.reverse.foreach(Files.delete)
+          Files.walk(libPath, Int.MaxValue).iterator.asScala.toList.reverse.foreach(Files.delete)
         }
         case _ => {
           println(s"Command $command not recgonized.")
@@ -108,6 +107,7 @@ object ScalaH {
   }
 
   def process(cmd: Array[String], dir: File = new File(".")) {
+//    println(s"In Pro: ${cmd.toList.toString}   ${dir}")
     val process = Runtime.getRuntime().exec(cmd, null, dir)
     val threadOut = new Thread(new Runnable {
       override def run: Unit = {
