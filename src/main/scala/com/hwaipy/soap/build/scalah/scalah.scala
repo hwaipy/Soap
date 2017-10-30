@@ -107,7 +107,7 @@ object ScalaH {
   }
 
   def process(cmd: Array[String], dir: File = new File(".")) {
-//    println(s"In Pro: ${cmd.toList.toString}   ${dir}")
+    //    println(s"In Pro: ${cmd.toList.toString}   ${dir}")
     val process = Runtime.getRuntime().exec(cmd, null, dir)
     val threadOut = new Thread(new Runnable {
       override def run: Unit = {
@@ -249,7 +249,10 @@ private class SbtDependenceParser(name: String, deps: List[String], sbtPath: Fil
   }
   val dependences = error match {
     case Some(e) => ""
-    case None => Source.fromFile(new File(sbtPath, "/target/streams/runtime/fullClasspath/$global/streams/export")).getLines.next
+    case None => Source.fromFile({
+      val ps = "/target/streams/runtime/fullClasspath/$global/streams/export" :: "/target/streams/runtime/fullClasspathAsJars/$global/streams/export" :: Nil
+      ps.map(p => new File(sbtPath, p)).map(f => (f.exists, f)).filter(z => z._1).head._2
+    }).getLines.next
   }
 }
 
