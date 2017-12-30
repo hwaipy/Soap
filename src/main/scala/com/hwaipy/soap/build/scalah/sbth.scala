@@ -7,6 +7,15 @@ import scala.collection.JavaConverters._
 
 object SbtH {
 
+  private val sbtCmd = System.getProperties.getProperty("os.name") match {
+    case osName if osName.startsWith("Windows") => "sbt.bat"
+    case _ => "sbt"
+  }
+  private val sperate = System.getProperties.getProperty("os.name") match {
+    case osName if osName.startsWith("Windows") => ";"
+    case _ => ":"
+  }
+
   def main(args: Array[String]) {
     try {
       if (args.size == 0) {
@@ -26,19 +35,19 @@ object SbtH {
 
       command match {
         case "clean" => {
-          process(Array("sbt", "clean"), new File("."))
+          process(Array(sbtCmd, "clean"), new File("."))
         }
         case "package" => {
-          process(Array("sbt", "package"), new File("."))
+          process(Array(sbtCmd, "package"), new File("."))
           val dist = new File("target/dist-package")
           if (!dist.exists) dist.mkdirs
-          val generatedJar = new File("target/scala-2.12/").listFiles.toList.filter(_.getName.toLowerCase.endsWith(".jar"))(0).toPath
+          val generatedJar = new File("target/scala-2.12/").listFiles.toList.filter(_.getName.toLowerCase.endsWith(".jar")).sortBy(f => f.getName.size).apply(0).toPath
           val mainJar = new File(dist, generatedJar.getFileName.toString).toPath
           Files.copy(generatedJar, mainJar, StandardCopyOption.REPLACE_EXISTING)
           val dependences = Source.fromFile(new File("target/streams/compile/dependencyClasspath/$global/streams/export")).getLines.next
           val libPath = dist.toPath.resolve("lib")
           if (!Files.exists(libPath)) Files.createDirectories(libPath)
-          dependences.split(":").filter(d => d.toLowerCase.endsWith(".jar")).foreach(dep => {
+          dependences.split(sperate).filter(d => d.toLowerCase.endsWith(".jar")).foreach(dep => {
             val originalPath = Paths.get(dep)
             val targetPath = libPath.resolve(originalPath.getFileName)
             Files.copy(originalPath, targetPath, StandardCopyOption.REPLACE_EXISTING)
@@ -67,14 +76,14 @@ object SbtH {
           Files.delete(new File(dist, "/META-INF").toPath)
         }
         case "packageSingle" => {
-          process(Array("sbt", "package"), new File("."))
+          process(Array(sbtCmd, "package"), new File("."))
           val dist = new File("target/dist-packageSingle")
           if (!dist.exists) dist.mkdirs
-          val generatedJar = new File("target/scala-2.12/").listFiles.toList.filter(_.getName.toLowerCase.endsWith(".jar"))(0).toPath
+          val generatedJar = new File("target/scala-2.12/").listFiles.toList.filter(_.getName.toLowerCase.endsWith(".jar")).sortBy(f => f.getName.size).apply(0).toPath
           val dependences = Source.fromFile(new File("target/streams/compile/dependencyClasspath/$global/streams/export")).getLines.next
           val libPath = dist.toPath.resolve("lib")
           if (!Files.exists(libPath)) Files.createDirectories(libPath)
-          dependences.split(":").filter(d => d.toLowerCase.endsWith(".jar")).foreach(dep => {
+          dependences.split(sperate).filter(d => d.toLowerCase.endsWith(".jar")).foreach(dep => {
             val originalPath = Paths.get(dep)
             val targetPath = libPath.resolve(originalPath.getFileName)
             Files.copy(originalPath, targetPath, StandardCopyOption.REPLACE_EXISTING)
