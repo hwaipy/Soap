@@ -17,7 +17,10 @@ object ScalaH {
     case s if s.contains("Windows") => "C:/ScalaH/tmp/"
     case _ => ""
   }
-
+  private val sperate = System.getProperties.getProperty("os.name") match {
+    case osName if osName.startsWith("Windows") => ";"
+    case _ => ":"
+  }
   def main(args: Array[String]) {
     try {
       if (args.size == 0) {
@@ -47,7 +50,10 @@ object ScalaH {
       val dependences = parseDependences(new File(scriptFileName))
 
       command match {
-        case "run" => process(Array("scala", "-classpath", dependences, scriptFileName))
+        case "run" => process(Array(ScalaH.isMac match {
+          case true => "scala"
+          case false => "C:\\ScalaH\\scala\\bin\\scala.bat"
+        }, "-classpath", dependences, scriptFileName))
         case "compile" => {
           val cd = s"${scriptFileName.dropRight(6)}.scalah/classes"
           Files.createDirectories(Paths.get(cd))
@@ -57,7 +63,7 @@ object ScalaH {
           val cd = s"${scriptFileName.dropRight(6)}.scalah/dist/"
           Files.createDirectories(Paths.get(cd))
           val libPath = Files.createDirectories(Paths.get(cd, "lib"))
-          dependences.split(":").foreach(dep => {
+          dependences.split(sperate).foreach(dep => {
             val originalPath = Paths.get(dep)
             val targetPath = libPath.resolve(originalPath.getFileName)
             Files.copy(originalPath, targetPath, StandardCopyOption.REPLACE_EXISTING)
@@ -79,7 +85,7 @@ object ScalaH {
           val cd = s"${scriptFileName.dropRight(6)}.scalah/jar/"
           Files.createDirectories(Paths.get(cd))
           val libPath = Files.createDirectories(Paths.get(cd, "lib"))
-          dependences.split(":").foreach(dep => {
+          dependences.split(sperate).foreach(dep => {
             val originalPath = Paths.get(dep)
             val targetPath = libPath.resolve(originalPath.getFileName)
             Files.copy(originalPath, targetPath, StandardCopyOption.REPLACE_EXISTING)
@@ -107,7 +113,7 @@ object ScalaH {
   }
 
   def process(cmd: Array[String], dir: File = new File(".")) {
-    //    println(s"In Pro: ${cmd.toList.toString}   ${dir}")
+//        println(s"In Pro: ${cmd.toList.toString}   ${dir}")
     val process = Runtime.getRuntime().exec(cmd, null, dir)
     val threadOut = new Thread(new Runnable {
       override def run: Unit = {
@@ -152,10 +158,10 @@ object ScalaH {
     val ivyDep = parseIvyDependences(deps, file.getName match {
       case name if name.toLowerCase.endsWith(".scala") => name.substring(0, name.length - 6)
       case name => name
-    }).split(":").drop(1).mkString(":")
+    }).split(sperate).drop(1).mkString(sperate)
 
     jarDep match {
-      case d if d.length > 0 => ivyDep + ":" + jarDep
+      case d if d.length > 0 => ivyDep + sperate + jarDep
       case _ => ivyDep
     }
   }
@@ -205,7 +211,7 @@ object ScalaH {
         case true => Some(matcher.group(1))
         case false => None
       }
-    }).filter(dep => dep != None).map(dep => dep.get).mkString(":")
+    }).filter(dep => dep != None).map(dep => dep.get).mkString(sperate)
   }
 }
 
@@ -226,8 +232,8 @@ private class SbtDependenceParser(name: String, deps: List[String], sbtPath: Fil
       scpw.close
       val sbtProcess = Runtime.getRuntime.exec(ScalaH.isMac match {
         case true => "sbt run"
-        case false => "java C:\\ScalaH\\sbt\\bin\\sbt-launch.jar run"
-      }, new Array[String](0), sbtPath)
+        case false => "sbt.bat run"
+      }, null, sbtPath)
       val sbtResult = new LinkedBlockingQueue[List[String]]
       val threadIn = new Thread(new Runnable {
         override def run {
