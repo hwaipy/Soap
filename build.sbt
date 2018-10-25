@@ -1,9 +1,9 @@
 name := "soap"
 version := "0.2.0"
-scalaVersion := "2.12.3"
+scalaVersion := "2.12.4"
 organization := "com.hwaipy"
-libraryDependencies += "org.scala-lang" % "scala-reflect" % "2.12.3"
-libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.12.3"
+libraryDependencies += "org.scala-lang" % "scala-reflect" % "2.12.4"
+libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.12.4"
 libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
 libraryDependencies += "com.hwaipy" %% "hydrogen" % "0.3.0"
 libraryDependencies += "com.xeiam.xchart" % "xchart" % "2.5.1" exclude("de.erichseifert.vectorgraphics2d", "VectorGraphics2D")
