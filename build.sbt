@@ -13,6 +13,7 @@ libraryDependencies += "org.jscience" % "jscience" % "4.3.1"
 libraryDependencies += "org.scalanlp" %% "breeze" % "1.0-RC2"
 libraryDependencies += "org.scalanlp" %% "breeze-natives" % "1.0-RC2"
 libraryDependencies += "com.hydra" %% "sydra" % "0.6.0"
+libraryDependencies += "org.jsoup" % "jsoup" % "1.11.3"
 scalacOptions ++= Seq("-feature")
 scalacOptions ++= Seq("-deprecation")
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
